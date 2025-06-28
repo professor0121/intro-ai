@@ -5,41 +5,51 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
-import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Form } from "@/components/ui/form"
+import FormField from "@/components/FormField"
 import { logo } from "@/utils/site.info"
 import Link from "next/link"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
-const formSchema = z.object({
-    username: z.string().min(2).max(50),
-})
 
-interface AuthFormProps {
-    type: FormType;
+const authFormSchema = ({ type }: { type: FormType }) => {
+    return z.object({
+        name: type === "sign-up" ? z.string().min(2).max(50) : z.string().optional(),
+        email: z.string().email(),
+        password: z.string().min(6),
+    })
 }
 
-const AuthForm = ({ type }: AuthFormProps) => {
+
+const AuthForm = ({ type }: {type:FormType}) => {
+    const router = useRouter();
+    const formSchema= authFormSchema({type});
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            username: "",
+            name: "",
+            email: "",
+            password: "",
         },
     })
 
     // 2. Define a submit handler.
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values)
+      try {
+        if(type === "sign-up"){
+            toast.success("Account created successfully")
+            router.push("/sign-in")
+        } else {
+            toast.success("Logged in successfully")
+            router.push("/")
+        }
+
+      } catch (error) {
+         console.log(error)
+         toast.error(`Something went wrong. Please try again.${error}`)
+      }
     }
     const isSignIn = type === "sign-in";
 
@@ -53,14 +63,35 @@ const AuthForm = ({ type }: AuthFormProps) => {
                 <h3>Practice job interviews with AI</h3>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6 mt-4 form">
-                        {!isSignIn&& <p>Name</p>}
-                        <p>Email</p>
-                        <p>Password</p>
-                        <Button className="btn" type="submit">{isSignIn? "Sign In" : "Create an Account"}</Button>
+                        {!isSignIn && 
+                        (
+                            <FormField
+                            control={form.control}
+                            name="name"
+                            label="Name"
+                            placeholder="John Doe"
+                            type="text"
+                            />
+                        )}
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            label="Email"
+                            placeholder="john@example.com"
+                            type="email"
+                        />
+                        <FormField
+                            control={form.control}
+                            name="password"
+                            label="Password"
+                            placeholder="Enter your password"
+                            type="password"
+                        />
+                        <Button className="btn" type="submit">{isSignIn ? "Sign In" : "Create an Account"}</Button>
                     </form>
                 </Form>
-                <p className="text-center">{isSignIn? "Don't have an account?" : "Already have an account?"}
-                <Link href={isSignIn? "/sign-up" : "/sign-in"} className="ml-2">{isSignIn? "Create an account" : "Sign in"}</Link>
+                <p className="text-center">{isSignIn ? "Don't have an account?" : "Already have an account?"}
+                    <Link href={isSignIn ? "/sign-up" : "/sign-in"} className="ml-2">{isSignIn ? "Create an account" : "Sign in"}</Link>
                 </p>
             </div>
         </div>
