@@ -23,9 +23,9 @@ export async function signUp(params: SignUpParams) {
             success: true,
             message: "Account created successfully"
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(error);
-        if (error.code === "auth/email-already-in-use") {
+        if (error && typeof error === 'object' && 'code' in error && error.code === "auth/email-already-in-use") {
             return {
                 success: false,
                 error: "Email already in use"
@@ -33,7 +33,9 @@ export async function signUp(params: SignUpParams) {
         }
         return {
             success: false,
-            error: error.message || "Unknown error occurred"
+            error: error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+                ? error.message
+                : "Unknown error occurred"
         };
     }
 }
@@ -68,9 +70,9 @@ export async function signIn(params: SignInParams) {
                 displayName: userRecord.displayName,
             }
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(error);
-        if (error.code === "auth/user-not-found") {
+        if (error && typeof error === 'object' && 'code' in error && error.code === "auth/user-not-found") {
             return {
                 success: false,
                 error: "User does not exist"
@@ -78,7 +80,9 @@ export async function signIn(params: SignInParams) {
         }
         return {
             success: false,
-            error: error.message || "Unknown error occurred"
+            error: error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+                ? error.message
+                : "Unknown error occurred"
         };
     }
 }
