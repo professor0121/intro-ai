@@ -3,6 +3,7 @@ import { Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { siteDescription, siteTitle } from "@/utils/site.info";
+import MouseDot from "@/components/mouse/Mouse";
 
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
@@ -24,7 +25,7 @@ export default function RootLayout({
       <body
         cz-shortcut-listen="true"
         className={`${monaSans.className} antialiased pattern `}
-      >
+      ><MouseDot/>
         {children}
         <Toaster />
       </body>

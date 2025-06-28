@@ -11,6 +11,9 @@ import { logo } from "@/utils/site.info"
 import Link from "next/link"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "../firebase/client"
+import { signIn, signUp } from "../lib/actions/auth.action"
 
 
 const authFormSchema = ({ type }: { type: FormType }) => {
@@ -22,9 +25,9 @@ const authFormSchema = ({ type }: { type: FormType }) => {
 }
 
 
-const AuthForm = ({ type }: {type:FormType}) => {
+const AuthForm = ({ type }: { type: FormType }) => {
     const router = useRouter();
-    const formSchema= authFormSchema({type});
+    const formSchema = authFormSchema({ type });
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -36,20 +39,47 @@ const AuthForm = ({ type }: {type:FormType}) => {
     })
 
     // 2. Define a submit handler.
-    function onSubmit(values: z.infer<typeof formSchema>) {
-      try {
-        if(type === "sign-up"){
-            toast.success("Account created successfully")
-            router.push("/sign-in")
-        } else {
-            toast.success("Logged in successfully")
-            router.push("/")
-        }
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        try {
+            if (type === "sign-up") {
+                const { name, email, password } = values;
+                const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
 
-      } catch (error) {
-         console.log(error)
-         toast.error(`Something went wrong. Please try again.${error}`)
-      }
+                const result = await signUp({
+                    uid: userCredentials.user.uid,
+                    name: name!,
+                    email,
+                    password
+                })
+                if (!result.success) {
+                    toast.error(result.error)
+                    return;
+                }
+                toast.success(result.message)
+                router.push("/sign-in")
+            } else {
+                const { email, password } = values;
+                const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+                const idToken = await userCredentials.user.getIdToken();
+                if (!idToken) {
+                    toast.error("Something went wrong. Please try again.")
+                    return;
+                }
+                const result = await signIn({
+                    email, idToken
+                })
+                if (!result.success) {
+                    toast.error(result.error)
+                    return;
+                }
+                toast.success(result.message)
+                router.push("/")
+            }
+
+        } catch (error) {
+            console.log(error)
+            toast.error(`Something went wrong. Please try again.${error}`)
+        }
     }
     const isSignIn = type === "sign-in";
 
@@ -63,16 +93,16 @@ const AuthForm = ({ type }: {type:FormType}) => {
                 <h3>Practice job interviews with AI</h3>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6 mt-4 form">
-                        {!isSignIn && 
-                        (
-                            <FormField
-                            control={form.control}
-                            name="name"
-                            label="Name"
-                            placeholder="John Doe"
-                            type="text"
-                            />
-                        )}
+                        {!isSignIn &&
+                            (
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    label="Name"
+                                    placeholder="John Doe"
+                                    type="text"
+                                />
+                            )}
                         <FormField
                             control={form.control}
                             name="email"
