@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { siteDescription, siteTitle } from "@/utils/site.info";
 
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
@@ -9,8 +10,8 @@ const monaSans = Mona_Sans({
 });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PROJECT_TITLE,
-  description: process.env.NEXT_PROJECT_DESCRIPTION,
+  title: siteTitle,
+  description: siteDescription,
 };
 
 export default function RootLayout({
